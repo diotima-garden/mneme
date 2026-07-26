@@ -1,0 +1,6 @@
+[submodule "utils"]
+	path = utils
+	url = https://github.com/diotima-garden/python-utils.git
+[submodule "session_crawler"]
+	path = session_crawler
+	url = https://github.com/diotima-garden/session-crawler.git
