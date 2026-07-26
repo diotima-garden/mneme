@@ -72,7 +72,9 @@ def build_prompt(source_text, branch, existing_filenames):
         "                to differentiate from the existing filenames listed above.\n"
         '  "summary"  — 4–8 sentences of plain prose. Describe the procedure, the challenges,\n'
         "                and the WHYs of the decisions, drawn only from the input above. No headings,\n"
-        "                no lists, no code fences.\n\n"
+        "                no lists, no code fences. Do not use double-quote characters anywhere in the\n"
+        "                summary (not even for quoting a phrase or title) — use single quotes instead,\n"
+        "                since an unescaped double quote breaks the surrounding JSON.\n\n"
         "Output the JSON object and nothing else."
     )
 
