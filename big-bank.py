@@ -9,11 +9,9 @@ from datetime import datetime
 from pathlib import Path
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_CLAUDE_DIR = _SCRIPT_DIR.parent
 
 sys.path.insert(0, str(_SCRIPT_DIR))
-sys.path.insert(0, str(_CLAUDE_DIR))
-from registry import load_banks, bank_archive_dir, populated_banks  # noqa: E402
+from registry import load_banks, bank_archive_dir  # noqa: E402
 from utils.log import make_logger  # noqa: E402
 from utils.llm_triggers import call_isolated as _call_claude  # noqa: E402
 

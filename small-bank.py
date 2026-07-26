@@ -8,18 +8,14 @@ from datetime import datetime
 from pathlib import Path
 
 HOOK_DIR = Path(__file__).resolve().parent
-CLAUDE_DIR = HOOK_DIR.parent
 JOBS_DUMP_PATH = HOOK_DIR / "small-jobs.json"
 LOG_PATH = HOOK_DIR / "mem-bank.log"
 WORKER_PATH = HOOK_DIR / "small-job-worker.py"
 
 sys.path.insert(0, str(HOOK_DIR))
-sys.path.insert(0, str(CLAUDE_DIR))
-from utils.project_dir_infrastructure import get_system_dir  # noqa: E402
-sys.path.insert(0, str(get_system_dir()))
+from utils.log import make_logger  # noqa: E402
 from session_crawler import SessionTranscript, extract_text  # noqa: E402
 from registry import load_banks, bank_effective_patterns, bank_small_bank_path, bank_capture_prompt  # noqa: E402
-from utils.log import make_logger  # noqa: E402
 
 log = make_logger("small-bank", LOG_PATH)
 

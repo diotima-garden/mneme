@@ -27,8 +27,11 @@ def bank_small_bank_path(bank_cfg, cwd=None):
     return p
 
 
-def bank_archive_dir(bank_cfg):
-    return Path(bank_cfg["bank"]) / "big-bank"
+def bank_archive_dir(bank_cfg, cwd=None):
+    p = Path(bank_cfg["bank"]) / "big-bank"
+    if cwd and not p.is_absolute():
+        p = Path(cwd) / p
+    return p
 
 
 def bank_capture_prompt(bank_cfg, cwd=None):

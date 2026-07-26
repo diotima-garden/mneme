@@ -1,8 +1,6 @@
-# Mem-bank Subsystem
+# Mneme — Narrative Extraction Memory Engine
 
-Self-contained memory-management subsystem. Captures per-session summaries during a Claude Code session and graduates them into a durable archive when work on a topic concludes.
-
-The subsystem is consolidated under `.claude/mem-bank/`. Outside that folder, three host-fixed locations carry thin handles that point in: `.claude/settings.json`, `.claude/commands/mem-bank-big-bank.md`, and `.gitignore`. Per-instance state (the active-context file, its backups, and the graduation archive) lives wherever the instance lives — currently under `.claude/meta/` for the architect+builder shared instance.
+*Mneme* is a recursive acronym: **M**neme **N**arrative **E**xtraction **M**emory **E**ngine. Self-contained memory-management subsystem. Captures per-session summaries during a Claude Code session and graduates them into a durable archive when work on a topic concludes.
 
 Graduation is user-triggered (run `/mem-bank-big-bank` while on the feature branch, before merging into master). The graduated `<topic>.md` then travels into master as part of the normal merge — no git hook involved.
 
@@ -16,16 +14,18 @@ The graduation run iterates every bank in `subscriptions.json`, summarizes each 
 
 ![Graduation output: two small-banks graduated into big-bank, one skipped](assets/graduation-02-output.png)
 
-## Subsystem files (this folder)
+## Subsystem files (this repo)
 
 | Path | What |
 |---|---|
-| `./subscriptions.json` | Bank registry. One entry per memory bank: `name`, `bank` (directory), optional `pattern` override. Graduation script reads this. |
 | `./registry.py` | Bank registry primitive. `load_banks`, `bank_effective_patterns`, `bank_small_bank_path`, `bank_archive_dir`, `populated_banks`. Imported by `small-bank.py` and `big-bank.py`. |
 | `./small-bank.py` | SessionEnd hook. Reads subscriptions, matches each bank's pattern against the transcript, spawns a single detached `claude -p` worker that appends a 2–4-sentence summary to all matched banks. |
 | `./big-bank.py` | Graduation script. In `--subscriptions` mode, iterates all banks, graduates each non-empty `small-bank.md` into `big-bank/` via Sonnet. Explicit `--source/--archive-dir/--backup-dir` mode retained for one-off use. |
+| `./small-job-worker.py` | Detached worker spawned by the SessionEnd hook. Reads `small-jobs.json`, summarizes the session via an isolated Claude call, and appends the result to each matched bank's `small-bank.md`. |
 | `./mem-bank.log` | Runtime log for capture and graduation. Tab-delimited. Gitignored. |
-| `./last-jobs.json` | JSON array of `{"target", "prompt"}` jobs written by hook, read by worker. One entry per matched bank. Gitignored, overwritten each fire. |
+| `./small-jobs.json` | JSON array of `{"target", "prompt"}` jobs written by the hook, read by the worker. One entry per matched bank. Gitignored, overwritten each fire. |
+
+`subscriptions.json` is host config, not part of this repo — see "Consumer contract" below.
 
 ## Bank directory convention
 
@@ -59,13 +59,26 @@ selecting a book to read or reporting back on a completed book. Sessions about
 card creation or vocabulary should be excluded.
 ```
 
-## Host-fixed handles (point into the subsystem)
+## Consumer contract
 
-| Path | What it does |
-|---|---|
-| `.claude/settings.json` | Registers the SessionEnd capture hook (`python3 .claude/mem-bank/small-bank.py --subscriptions .claude/mem-bank/subscriptions.json`). Allowlists `python3 .claude/mem-bank/big-bank.py:*`. |
-| `.claude/commands/mem-bank-big-bank.md` | `/mem-bank-big-bank` slash command. Runs `big-bank.py --subscriptions ...` — no variables needed. |
-| `.gitignore` | Ignores subsystem runtime artifacts (`mem-bank.log`, `last-jobs.json`) and all `small-bank.md` files via `**/small-bank.md`. |
+This repo is a submodule, not a standalone tool — a host project must wire it in:
+
+1. **Submodule it in**, at any mount path (e.g. `.claude/mem-bank`). It nests two submodules
+   of its own (`utils/`, `session_crawler/`) — after adding, run
+   `git submodule update --init --recursive` and verify both populate.
+2. **Provide your own `subscriptions.json`** outside this repo (a sibling directory, not
+   inside the mount path — this repo does not ship one). One entry per memory bank: `name`,
+   `bank` (directory), optional `pattern`/`patterns` override.
+3. **Wire the SessionEnd hook** in `.claude/settings.json`, pointing `--subscriptions` at
+   your file:
+   ```
+   python3 <mount>/small-bank.py --subscriptions <path-to-your-subscriptions.json>
+   ```
+   Allowlist `python3 <mount>/big-bank.py:*` and `python3 <mount>/small-job-worker.py*`.
+4. **Wire your own slash commands** (e.g. `/mem-bank-big-bank` running
+   `big-bank.py --subscriptions <path-to-your-subscriptions.json>`).
+5. **Gitignore runtime artifacts** produced under the mount path: `mem-bank.log`,
+   `small-jobs.json`.
 
 ## Merge dynamics
 

@@ -6,12 +6,10 @@ from datetime import datetime
 from pathlib import Path
 
 WORKER_DIR = Path(__file__).resolve().parent
-CLAUDE_DIR = WORKER_DIR.parent
 JOBS_DUMP_PATH = WORKER_DIR / "small-jobs.json"
 LOG_PATH = WORKER_DIR / "mem-bank.log"
 
 sys.path.insert(0, str(WORKER_DIR))
-sys.path.insert(0, str(CLAUDE_DIR))
 from utils.log import make_logger  # noqa: E402
 from utils.llm_triggers import call_isolated  # noqa: E402
 
