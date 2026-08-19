@@ -88,12 +88,15 @@ def main(argv):
 
         log(f"claude response ({len(summary)} chars): {summary!r}")
 
-        try:
-            append_to_target(target, summary, session_id)
-            log(f"appended summary to {target}")
-        except Exception as e:
-            log(f"append failed for {target}: {e}")
-            continue
+        if summary.strip().startswith("SKIP"):
+            log(f"bank filter excluded session for {target} — skipping append")
+        else:
+            try:
+                append_to_target(target, summary, session_id)
+                log(f"appended summary to {target}")
+            except Exception as e:
+                log(f"append failed for {target}: {e}")
+                continue
 
         job["processed"] = True
         job["processed_at"] = datetime.now().isoformat(timespec="seconds")
