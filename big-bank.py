@@ -234,7 +234,7 @@ def graduate_one(source, archive_dir, backup_dir, branch, name=""):
     return 0
 
 
-def main(argv):
+def main(argv, banks=None):
     try:
         args = parse_args(argv)
     except SystemExit as e:
@@ -242,12 +242,14 @@ def main(argv):
 
     branch = detect_branch(args.branch)
 
-    if args.subscriptions:
+    if banks is None and args.subscriptions:
         try:
             banks = load_banks(args.subscriptions)
         except Exception as e:
             print(f"error: failed to load subscriptions: {e}", file=sys.stderr)
             return 1
+
+    if banks is not None:
         overall = 0
         for bank in banks:
             if not bank.get("graduate", True):

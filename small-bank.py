@@ -153,7 +153,7 @@ def spawn_worker():
     log(f"detached worker spawned pid={proc.pid}")
 
 
-def run_hook(args):
+def run_hook(args, banks=None):
     try:
         raw = sys.stdin.read()
         inp = json.loads(raw) if raw.strip() else {}
@@ -173,20 +173,26 @@ def run_hook(args):
         log(f"missing transcript_path: {transcript_path}")
         return 0
 
-    if not args.subscriptions:
-        log("hook mode requires --subscriptions")
-        return 0
+    if banks is None:
+        if not args.subscriptions:
+            log("hook mode requires --subscriptions")
+            return 0
 
-    log(
-        f"called: subscriptions={args.subscriptions!r} "
-        f"transcript={transcript_path} session={session_id} cwd={cwd}"
-    )
+        log(
+            f"called: subscriptions={args.subscriptions!r} "
+            f"transcript={transcript_path} session={session_id} cwd={cwd}"
+        )
 
-    try:
-        banks = load_banks(args.subscriptions, cwd)
-    except Exception as e:
-        log(f"failed to load subscriptions: {e}")
-        return 0
+        try:
+            banks = load_banks(args.subscriptions, cwd)
+        except Exception as e:
+            log(f"failed to load subscriptions: {e}")
+            return 0
+    else:
+        log(
+            f"called: banks passed in-process ({len(banks)}) "
+            f"transcript={transcript_path} session={session_id} cwd={cwd}"
+        )
 
     transcript = SessionTranscript(transcript_path)
 
